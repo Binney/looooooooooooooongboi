@@ -93,8 +93,7 @@ last_button_pressed = -1
 while True:
     if sequence_to_enter != correct_answer:
         # You got at least some of them right
-        pix = ((len(correct_answer) - len(sequence_to_enter)) * lights.num_pixels) // len(correct_answer)
-        lights.fill_rainbow_to(pix)
+        lights.fill_rainbow_to((len(correct_answer) - len(sequence_to_enter)) / len(correct_answer))
         hue_offset += 1
 
     event = keys.events.get()

@@ -53,7 +53,8 @@ class Lights():
             self.pixels.show()
             time.sleep(wait)
 
-    def fill_rainbow_to(self, pix):
+    def fill_rainbow_to(self, percentage):
+        pix = percentage * self.num_pixels // 1
         for i in range(self.num_pixels - pix, self.num_pixels):
             rc_index = (i * 256 // self.num_pixels) + self.hue_offset
             self.pixels[i] = colorwheel(rc_index & 255)
