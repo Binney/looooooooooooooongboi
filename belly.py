@@ -7,63 +7,7 @@ from audioio import AudioOut
 from audiomp3 import MP3Decoder
 from audiobusio import I2SOut
 
-from rainbowio import colorwheel
-from neopixel import NeoPixel
-from adafruit_dotstar import DotStar
-
 print("letsgooo")
-
-pixels = NeoPixel(board.NEOPIXEL, 2, brightness=0.1, auto_write=False)
-
-num_pixels = 59 # 118 # Actually 118 pixels in the strip, but doubled up
-dots = DotStar(board.SCK, board.MOSI, num_pixels, brightness=0.2, auto_write=False)
-
-RED = (255, 0, 0)
-ORANGE = (255, 50, 0)
-YELLOW = (255, 150, 0)
-GREEN = (0, 255, 0)
-CYAN = (0, 255, 255)
-BLUE = (0, 0, 255)
-PURPLE = (255, 0, 255)
-PINK = (255, 75, 150)
-WHITE = (255, 255, 255)
-NOTHING = (0, 0, 0)
-
-def rainbow_cycle(wait):
-    for j in range(255):
-        pixels.fill(colorwheel(j))
-        pixels.show()
-        for i in range(num_pixels):
-            rc_index = (i * 256 // num_pixels) + j
-            dots[i] = colorwheel(rc_index & 255)
-        dots.show()
-        time.sleep(wait)
-
-def show_colour(color):
-    pixels.fill(color)
-    pixels.show()
-    dots.fill(color)
-    dots.show()
-
-def sweeping_clear(wait):
-    for i in range(num_pixels):
-        dots[i] = NOTHING
-        dots.show()
-        time.sleep(wait)
-
-def loading_bar(wait):
-    for i in range(num_pixels):
-        dots[num_pixels - 1] = WHITE
-        dots.show()
-        time.sleep(wait)
-
-rainbow_cycle(0)  # Increase the number to slow down the rainbow
-
-def fill_rainbow_to(pix):
-    for i in range(num_pixels - pix, num_pixels):
-        rc_index = (i * 256 // num_pixels) + hue_offset
-        dots[i] = colorwheel(rc_index & 255)
-    dots.show()
 
 hue_offset = 0
 white_chaser_size = 5
@@ -89,7 +33,7 @@ def bump_white_over_rainbow(calmness):
     hue_offset += 1
 
 def lerp(a, b, x):
-    return a + (b - a) * x;
+    return a + (b - a) * x
 
 def colour_interp(col1, col2, x):
     (r1, g1, b1) = col1
