@@ -8,9 +8,9 @@ from music import Music
 
 print("letsgooo")
 
-keys = keypad.Keys((board.A0, board.A1, board.A2,board.A3,board.A4, board.A5), value_when_pressed=False, pull=True)
-lights = Lights(board.NEOPIXEL, 60)
-music = Music(board.D1, board.D10, board.D11)
+keys = keypad.Keys((board.GP1, board.GP2, board.GP3,board.GP4,board.GP5, board.GP6), value_when_pressed=False, pull=True)
+lights = Lights(board.GP7, 60)
+music = Music(board.GP8, board.GP9, board.GP10)
 
 def play_song():
     print("Playing song...")

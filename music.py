@@ -1,4 +1,3 @@
-from audioio import AudioOut
 from audiomp3 import MP3Decoder
 from audiobusio import I2SOut
 
