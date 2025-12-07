@@ -2,100 +2,73 @@ import time
 import random
 import board
 import keypad
+import busio
+import sdcardio
+import storage
 
 from lights import Lights, RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE, PINK, WHITE, NOTHING
 from music import Music
+import os
 
 print("letsgooo")
 
-keys = keypad.Keys((board.GP1, board.GP2, board.GP3,board.GP4,board.GP5, board.GP6), value_when_pressed=False, pull=True)
+keys = keypad.Keys((board.GP17, board.GP18, board.GP19, board.GP20, board.GP21, board.GP22), value_when_pressed=False, pull=True)
 lights = Lights(board.GP7, 60)
-music = Music(board.GP8, board.GP9, board.GP10)
+music = Music(board.GP1, board.GP2, board.GP3)
 
-def play_song():
-    print("Playing song...")
-    time_start = time.monotonic()
-    while music.playing():
-        current_time = time.monotonic()
-        if current_time - time_start < 8.475:
-            # first synth stab
-            lights.bump_sunrise(0.1)
-        elif current_time - time_start < 12.379:
-            # second synth stab
-            lights.bump_second_sunrise(0.05)
-        elif current_time - time_start < 16.683:
-            # third synth stab
-            lights.bump_third_sunrise(0.05)
-        elif current_time - time_start < 20.721:
-            # rgss
-            lights.bump_sparkles(0.2)
-        elif current_time - time_start < 28.574:
-            # rgss
-            lights.bump_sparkles(0.1)
-        elif current_time - time_start < 33.322:
-            # RGSS
-            lights.bump_sparkles(0.05)
-        elif current_time - time_start < 50.005:
-            # second singer
-            lights.bump_fade_colours([ORANGE, PURPLE, BLUE], 3)
-        elif current_time - time_start < 58.302:
-            lights.bump_fade_colours([YELLOW, GREEN, CYAN, (0, 255, 50)], 2)
-        elif current_time - time_start < 65.268:
-            lights.bump_fade_colours([PINK, CYAN], 3)
-        elif current_time - time_start < 66.821:
-            # big solo
-            lights.bump_fade_colours([PINK, CYAN, WHITE], 5)
-        elif current_time - time_start < 72.766:
-            # choir
-            lights.show_colour(WHITE)
-        elif current_time - time_start < 75.073:
-            # cymbals
-            lights.show_colour(NOTHING)
-        elif current_time - time_start < 83.237:
-            # amazing rainbows
-            lights.bump_rainbow(5)
-        elif current_time - time_start < 91.845:
-            # amazing rainbows even faster
-            lights.bump_rainbow(2)
-        elif current_time - time_start < 100.142:
-            # hyper ultra
-            lights.bump_white_over_rainbow(2)
-        elif current_time - time_start < 108.661:
-            # synth solo
-            lights.bump_white_over_rainbow(1)
-        else:
-            lights.show_colour(BLUE)
-        pass
-    lights.sweeping_clear(0.1)
-    print("blimey")
+spi = busio.SPI(board.GP14, board.GP15, board.GP12)
+cs = board.GP13
 
-def shuffle_answer():
-    numbers = ""
-    for i in range(6):
-        numbers += str(i)
-    result = ""
-    while numbers != "":
-        char = random.choice(numbers)
-        result += char
-        numbers = numbers.replace(char, "")
-        time.sleep(0.1)
-    print("The answer is:", result)
-    return result
+song_list = ["dale.mp3"]
+sfx_list = ["dale.mp3"]
+
+def shuffle(list):
+    # no shuffle in circuitpython random
+    while len(list) > 0:
+        index = random.randint(0, len(list) - 1)
+        yield list.pop(index)
+
+try:
+    sdcard = sdcardio.SDCard(spi, cs)
+    vfs = storage.VfsFat(sdcard)
+    storage.mount(vfs, "/sd")
+
+    music_files = os.listdir("/sd/music")
+    song_list = [f for f in music_files if not f.startswith("._") and (f.endswith('.mp3') or f.endswith('.wav'))]
+    song_list = list(shuffle(song_list))
+
+    sound_files = os.listdir("/sd/sounds")
+    sfx_list = [f for f in sound_files if not f.startswith("._") and (f.endswith('.mp3') or f.endswith('.wav'))]
+    sfx_list = list(shuffle(sfx_list))
+
+except Exception as e:
+    print("SD Card Mount Error:", e)
+
+current_song = -1
+current_sfx = -1
+
+def play_next_song():
+    global current_song
+    current_song = (current_song + 1) % len(song_list)
+    song_to_play = song_list[current_song]
+    print(f"Playing song: {song_to_play}")
+    music.play(f"/sd/music/{song_to_play}")
+
+def play_next_sfx():
+    global current_sfx
+    current_sfx = (current_sfx + 1) % len(sfx_list)
+    sfx_to_play = sfx_list[current_sfx]
+    print(f"Playing song: {sfx_to_play}")
+    music.play(f"/sd/sounds/{sfx_to_play}")
 
 lights.reset()
 
-correct_answer = "012345"
-sequence_to_enter = correct_answer
-
-last_keypress_heard = 0
+last_keypress_heard_time = 0
 last_button_pressed = -1
 
-while True:
-    if sequence_to_enter != correct_answer:
-        # You got at least some of them right
-        lights.fill_rainbow_to((len(correct_answer) - len(sequence_to_enter)) / len(correct_answer))
-        hue_offset += 1
+current_lights = 0
 
+while True:
     event = keys.events.get()
     # event will be None if nothing has happened.
     if event:
@@ -103,38 +76,31 @@ while True:
         print(event.timestamp)
         if event.pressed:
             last_button_pressed = event.key_number
-            if sequence_to_enter[0] == str(event.key_number):
-                print("Correct!")
-                sequence_to_enter = sequence_to_enter[1:]
-            else:
-                print("Wrong")
-                sequence_to_enter = correct_answer
-                lights.reset()
-            if sequence_to_enter == "":
-                print("Unlocked the Secret Mode!")
-                # Restart game:
-                sequence_to_enter = correct_answer
-                # Celebrate:
-                play_song()
-            last_keypress_heard = time.monotonic()
+            last_keypress_heard_time = time.monotonic()
         if event.released:
             last_button_pressed = -1
 
-    if last_button_pressed > 0 and time.monotonic() - last_keypress_heard > 10:
-        # 0 starts the sequence, ignore that
+    if current_lights == 1:
+        lights.bump_trans_pride()
+    elif current_lights == 2:
+        # lights.sunset()
+        # TODO bump other chasers
+        pass
+    else:
+        lights.reset()
+
+    if last_button_pressed >= 0 and time.monotonic() - last_keypress_heard_time > 1:
+        print("time to do a thing!", last_button_pressed)
+        if last_button_pressed == 0:
+            play_next_song()
+            last_button_pressed = -1
         if last_button_pressed == 1:
-            lights.meadow()
+            play_next_sfx()
             last_button_pressed = -1
         if last_button_pressed == 2:
-            lights.trans_pride()
+            current_lights = (current_lights + 1) % 3
             last_button_pressed = -1
         if last_button_pressed == 3:
             lights.sunset()
-            last_button_pressed = -1
-        if last_button_pressed == 4:
-            lights.glitter()
-            last_button_pressed = -1
-        if last_button_pressed == 5:
-            lights.glow()
             last_button_pressed = -1
     time.sleep(0.01)
