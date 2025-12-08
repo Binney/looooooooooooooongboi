@@ -12,8 +12,8 @@ import os
 
 print("letsgooo")
 
-keys = keypad.Keys((board.GP17, board.GP18, board.GP19, board.GP20, board.GP21, board.GP22), value_when_pressed=False, pull=True)
-lights = Lights(board.GP7, 60)
+keys = keypad.Keys((board.GP17, board.GP18, board.GP19, board.GP20, board.GP21), value_when_pressed=False, pull=True)
+lights = Lights(board.GP0, 60)
 music = Music(board.GP1, board.GP2, board.GP3)
 
 spi = busio.SPI(board.GP14, board.GP15, board.GP12)
@@ -28,13 +28,18 @@ def shuffle(list):
         index = random.randint(0, len(list) - 1)
         yield list.pop(index)
 
+songs_that_are_too_long = [
+    "mii.mp3",
+    "Flying_Kerfuffle.mp3"
+]
+
 try:
     sdcard = sdcardio.SDCard(spi, cs)
     vfs = storage.VfsFat(sdcard)
     storage.mount(vfs, "/sd")
 
     music_files = os.listdir("/sd/music")
-    song_list = [f for f in music_files if not f.startswith("._") and (f.endswith('.mp3') or f.endswith('.wav'))]
+    song_list = [f for f in music_files if not f.startswith("._") and not f in songs_that_are_too_long and (f.endswith('.mp3') or f.endswith('.wav'))]
     song_list = list(shuffle(song_list))
 
     sound_files = os.listdir("/sd/sounds")
@@ -52,6 +57,7 @@ def play_next_song():
     current_song = (current_song + 1) % len(song_list)
     song_to_play = song_list[current_song]
     print(f"Playing song: {song_to_play}")
+    music.stop()
     music.play(f"/sd/music/{song_to_play}")
 
 def play_next_sfx():
@@ -59,6 +65,7 @@ def play_next_sfx():
     current_sfx = (current_sfx + 1) % len(sfx_list)
     sfx_to_play = sfx_list[current_sfx]
     print(f"Playing song: {sfx_to_play}")
+    music.stop()
     music.play(f"/sd/sounds/{sfx_to_play}")
 
 lights.reset()
@@ -80,9 +87,9 @@ while True:
         if event.released:
             last_button_pressed = -1
 
-    if current_lights == 1:
-        lights.bump_trans_pride()
-    elif current_lights == 2:
+    if current_lights == 0:
+        lights.bump_rainbow(1)
+    elif current_lights == 1:
         # lights.sunset()
         # TODO bump other chasers
         pass
@@ -101,6 +108,7 @@ while True:
             current_lights = (current_lights + 1) % 3
             last_button_pressed = -1
         if last_button_pressed == 3:
-            lights.sunset()
+            # just switch off lights
+            current_lights = -1
             last_button_pressed = -1
     time.sleep(0.01)

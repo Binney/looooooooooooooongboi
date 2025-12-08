@@ -118,7 +118,7 @@ class Lights():
             self.pixels[i] = palette_interp(palette, i / self.num_pixels)
         self.pixels.show()
 
-    def bump_chaser(self, palette, wait, frame, tail):
+    def bump_chaser(self, palette, wait, frame, tail=0):
         colour = palette_interp(palette, (frame % self.num_pixels) / self.num_pixels)
         if frame < self.num_pixels:
             self.pixels[frame] = colour
@@ -180,10 +180,8 @@ class Lights():
             self.fade_colours([YELLOW, GREEN, CYAN, (0, 255, 50)])
         self.reset()
 
-    def trans_pride(self):
-        for _ in range(demo_duration):
-            self.chaser([PINK, CYAN, WHITE], 5, 0.05)
-        self.reset()
+    def bump_trans_pride(self):
+        self.bump_chaser([PINK, CYAN, WHITE], 5, 0.05)
 
     def sunset(self):
         for _ in range(demo_duration):
