@@ -28,7 +28,7 @@ def shuffle(list):
         index = random.randint(0, len(list) - 1)
         yield list.pop(index)
 
-songs_that_are_too_long = [
+songs_that_are_cursed = [
     "mii.mp3",
     "Flying_Kerfuffle.mp3"
 ]
@@ -39,7 +39,7 @@ try:
     storage.mount(vfs, "/sd")
 
     music_files = os.listdir("/sd/music")
-    song_list = [f for f in music_files if not f.startswith("._") and not f in songs_that_are_too_long and (f.endswith('.mp3') or f.endswith('.wav'))]
+    song_list = [f for f in music_files if not f.startswith("._") and not f in songs_that_are_cursed and (f.endswith('.mp3') or f.endswith('.wav'))]
     song_list = list(shuffle(song_list))
 
     sound_files = os.listdir("/sd/sounds")
@@ -90,9 +90,15 @@ while True:
     if current_lights == 0:
         lights.bump_rainbow(1)
     elif current_lights == 1:
-        # lights.sunset()
-        # TODO bump other chasers
-        pass
+        lights.bump_sunset()
+    elif current_lights == 2:
+        lights.bump_trans_pride()
+    elif current_lights == 3:
+        lights.bump_glitter()
+    elif current_lights == 4:
+        lights.bump_glow()
+    elif current_lights == 5:
+        lights.bump_meadow()
     else:
         lights.reset()
 
@@ -105,7 +111,7 @@ while True:
             play_next_sfx()
             last_button_pressed = -1
         if last_button_pressed == 2:
-            current_lights = (current_lights + 1) % 3
+            current_lights = (current_lights + 1) % 6
             last_button_pressed = -1
         if last_button_pressed == 3:
             # just switch off lights

@@ -175,25 +175,17 @@ class Lights():
     def reset(self):
         self.show_colour(NOTHING)
 
-    def meadow(self):
-        for _ in range(demo_duration):
-            self.fade_colours([YELLOW, GREEN, CYAN, (0, 255, 50)])
-        self.reset()
+    def bump_meadow(self):
+        self.bump_fade_colours([YELLOW, GREEN, CYAN, (0, 255, 50)], 1)
 
     def bump_trans_pride(self):
-        self.bump_chaser([PINK, CYAN, WHITE], 5, 0.05)
+        self.bump_fade_colours([PINK, CYAN, WHITE], 1)
 
-    def sunset(self):
-        for _ in range(demo_duration):
-            self.fade_colours([ORANGE, PURPLE, BLUE])
-        self.reset()
+    def bump_sunset(self):
+        self.bump_fade_colours([ORANGE, PURPLE, BLUE], 1)
 
-    def glitter(self):
-        for _ in range(3):
-            self.chaser([WHITE, NOTHING, NOTHING, PURPLE, NOTHING, NOTHING, WHITE, NOTHING, ORANGE, NOTHING], 3, 0.1)
-        self.reset()
+    def bump_glitter(self):
+        self.bump_fade_colours([WHITE, NOTHING, NOTHING, PURPLE, NOTHING, NOTHING, WHITE, NOTHING, ORANGE, NOTHING], 3)
 
-    def glow(self):
-        for _ in range(demo_duration):
-            self.fade_colours([RED, ORANGE, YELLOW])
-        self.reset()
+    def bump_glow(self):
+        self.bump_fade_colours([RED, ORANGE, YELLOW], 1)
