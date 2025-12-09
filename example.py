@@ -5,6 +5,7 @@ import keypad
 import busio
 import sdcardio
 import storage
+import digitalio
 
 from lights import Lights, RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE, PINK, WHITE, NOTHING
 from music import Music
@@ -18,6 +19,16 @@ music = Music(board.GP1, board.GP2, board.GP3)
 
 spi = busio.SPI(board.GP14, board.GP15, board.GP12)
 cs = board.GP13
+
+is_battery_unplugged = digitalio.DigitalInOut(board.GP28)
+is_battery_unplugged.direction = digitalio.Direction.INPUT
+is_battery_unplugged.pull = digitalio.Pull.UP
+
+is_bottom_half_unplugged = digitalio.DigitalInOut(board.GP16)
+is_bottom_half_unplugged.direction = digitalio.Direction.INPUT
+is_bottom_half_unplugged.pull = digitalio.Pull.UP
+
+# Fetch is_battery_unplugged.value or is_bottom_half_unplugged.value if you want to use 'em
 
 song_list = ["dale.mp3"]
 sfx_list = ["dale.mp3"]
@@ -68,6 +79,10 @@ def play_next_sfx():
     music.stop()
     music.play(f"/sd/sounds/{sfx_to_play}")
 
+def play_eggs():
+    music.stop()
+    music.play("/sd/sounds/Eggs eggs eggs.mp3")
+
 lights.reset()
 
 last_keypress_heard_time = 0
@@ -102,7 +117,7 @@ while True:
     else:
         lights.reset()
 
-    if last_button_pressed >= 0 and time.monotonic() - last_keypress_heard_time > 1:
+    if last_button_pressed >= 0 and time.monotonic() - last_keypress_heard_time > 0.2:
         print("time to do a thing!", last_button_pressed)
         if last_button_pressed == 0:
             play_next_song()
@@ -116,5 +131,8 @@ while True:
         if last_button_pressed == 3:
             # just switch off lights
             current_lights = -1
+            last_button_pressed = -1
+        if last_button_pressed == 4:
+            play_eggs()
             last_button_pressed = -1
     time.sleep(0.01)
